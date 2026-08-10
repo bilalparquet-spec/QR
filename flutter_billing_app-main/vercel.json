@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "installCommand": "if cd flutter; then git pull && cd .. ; else git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && (flutter/bin/flutter doctor || true) && flutter/bin/flutter config --enable-web --no-analytics && flutter/bin/flutter pub get",
+  "buildCommand": "flutter/bin/flutter gen-l10n && flutter/bin/flutter build web --release",
+  "outputDirectory": "build/web",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
