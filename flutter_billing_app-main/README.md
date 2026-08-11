@@ -1,0 +1,136 @@
+# 🛒 Mobile POS & Billing App 
+
+A feature-rich, high-performance offline-first billing and Point of Sale (POS) application built with Flutter. Designed for seamless retail checkout operations featuring barcode scanning, thermal Bluetooth printing, and robust local data persistence.
+
+## Screenshot
+
+
+https://github.com/user-attachments/assets/f2d16454-5408-43b3-b207-cd843bbc2c9e
+
+
+
+## 🎯 Project Scope
+
+This application serves as a complete offline POS system for small to medium-sized retail shops. It streamlines the checkout process, catalog management, and receipt generation securely entirely on-device.
+
+### Core Features:
+- **Product Management System**: Complete CRUD operations for inventory items with barcode/QR code support.
+- **Smart Checkout System**: Rapid cart building via camera-based barcode scanning or manual entry, and robust order calculation functionality.
+- **Bluetooth Thermal Printing**: Direct integration with thermal printers (`print_bluetooth_thermal`) to instantly output physical receipts.
+- **Shop Settings & Customization**: Centrally managed shop details printed dynamically on receipts.
+- **Offline-First Architecture**: Powered by `Hive` for lightning-fast localized NoSQL data storage. No active internet connectivity required.
+
+## 🛠 Tech Stack & Architecture
+
+Built leveraging industry-standard architectural principles (Clean Architecture & Feature-Driven Design) ensuring scalability, separation of concerns, and robust testability. 
+
+- **Framework**: [Flutter](https://flutter.dev/) (SDK >=3.1.0)
+- **State Management**: `flutter_bloc`
+- **Dependency Injection**: `get_it`
+- **Routing**: `go_router`
+- **Local Database**: `hive` & `hive_flutter`
+- **Data Modeling**: `json_serializable`, `equatable`
+- **Functional Programming**: `fpdart`
+- **Hardware Integrations**: `mobile_scanner` (barcodes), `print_bluetooth_thermal`
+
+## 📁 File Structure
+
+The codebase is organized using a **Feature-First Clean Architecture** utilizing domain-driven concepts.
+
+```text
+lib/
+├── core/                       # Core application utilities and shared components
+│   ├── data/                   # Global data sources (e.g., Hive initialization)
+│   ├── error/                  # Standardized Failure/Exception models (fpdart compatible)
+│   ├── theme/                  # UI aesthetics, typography, styling
+│   ├── usecase/                # Base UseCase contracts
+│   ├── utils/                  # Helpers (e.g., PrinterHelper, formatters)
+│   ├── widgets/                # Reusable global UI widgets (AppBars, generic buttons)
+│   └── service_locator.dart    # get_it dependency injection setup
+│
+└── features/                   # Independent feature modules
+    ├── billing/                # Core POS operations: Cart, Checkout, Invoice Generation
+    ├── product/                # Inventory management: Adding, Listing, Scanning products
+    ├── settings/               # App configuration: Printer connections, App settings
+    └── shop/                   # Shop details configuration
+```
+
+*Note: Each feature is further subdivided internally into Clean Architecture layers: `data`, `domain`, and `presentation`.*
+
+## 💡 Use Cases
+
+- **Rapid Billing Entry**: A cashier launches the app, navigates to the checkout page, and uses the device camera to instantly scan product barcodes. The products are added to the cart, the total is calculated including taxes, and a receipt is finalized.
+- **Physical Receipt Generation**: After checkout confirmation, the app triggers a connected external Bluetooth thermal POS printer to instantly print an itemized paper receipt with the shop’s header.
+- **Inventory Sideloading**: A manager opens the Product feature to add new stock to the local database, taking a picture of the barcode to bind the SKU for future lightning-fast checkouts.
+- **No-Connection Operation**: The business operates a stall at an exhibition with poor networking. The app functions entirely via its embedded Hive local database and Bluetooth, completely undisturbed by network drops.
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Flutter SDK `^3.1.0` or higher
+- Android Studio / Xcode for emulators and building.
+- *Optional*: A physical Android/iOS device and a Bluetooth Thermal Printer for testing hardware integrations natively.
+
+### Installation
+
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   git clone <repository_url>
+   cd billing_app
+   ```
+
+2. Fetch dependencies:
+   ```bash
+   flutter pub get
+   ```
+
+3. Run code generation (required for Hive adapters and JSON serialization):
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   ```
+
+4. Run the project:
+   ```bash
+   flutter run
+   ```
+
+## 🌍 Languages & Currency
+
+This build adds full trilingual support and Algerian Dinar pricing on top of the original app:
+
+- **Languages**: Arabic (default, full RTL), French, and English — switchable anytime from **Settings → Language**, and the choice is remembered (saved in Hive) between app launches.
+- **Currency**: All prices are now formatted as **Algerian Dinar (DZD)** — shown as `د.ج` in Arabic and `DA` in French/English, with locale-aware number formatting.
+- Translations live in `lib/l10n/app_en.arb`, `app_ar.arb`, and `app_fr.arb`. Flutter's official `gen-l10n` tool generates the `AppLocalizations` class from these at build time — no extra packages beyond `flutter_localizations` (already added to `pubspec.yaml`).
+
+To add or tweak text, edit the `.arb` files and run:
+```bash
+flutter gen-l10n
+```
+
+## ☁️ Deploying a preview to Vercel
+
+This is a Flutter **mobile** app, so to preview it on Vercel it's built for the **web** target. Trying to make Vercel's own build servers install the Flutter SDK turned out to be unreliable (dashboard settings silently overriding `vercel.json`, doctor/toolchain checks, etc.), so this project instead builds with **GitHub Actions** (using the official, widely-used `subosito/flutter-action`) and then uploads the finished static site straight to Vercel — Vercel's build system is never involved at all, which removes that entire class of failure.
+
+**One-time setup (about 5 minutes):**
+
+1. **Push this project to a GitHub repo** (if you haven't already).
+2. **Create an empty project on Vercel** so you have a project to deploy into:
+   - On [vercel.com](https://vercel.com) → "Add New Project" → import the repo → just deploy once (it may fail or show a blank page — that's fine, we only need the project to exist).
+3. **Get three values and add them as GitHub Secrets** (repo → Settings → Secrets and variables → Actions → New repository secret):
+   - `VERCEL_TOKEN` — generate at [vercel.com/account/tokens](https://vercel.com/account/tokens).
+   - `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` — easiest way to get both:
+     ```bash
+     npm i -g vercel
+     vercel link   # run inside the project folder, follow the prompts
+     cat .vercel/project.json   # shows both IDs
+     ```
+4. **Push to the `main` branch** (or run the workflow manually from the GitHub "Actions" tab → "Deploy Flutter Web to Vercel" → "Run workflow").
+
+From then on, every push to `main` automatically: fetches Flutter via the official action → `flutter pub get` → `flutter gen-l10n` → `flutter build web --release` → uploads `build/web` to Vercel as a static site. Check progress under the repo's **Actions** tab, and the job's final log line gives you the live URL.
+
+**If it still fails:** open the failed GitHub Actions run and copy the red error text — with a real CI log (rather than a single "exited with 1" line from Vercel) it's much easier to pin down exactly what broke.
+
+**Good to know about the web build:**
+- The barcode camera scanner works in the browser (it'll ask for camera permission) and the UI/RTL/currency/language switching all work fully.
+- Bluetooth thermal printing, vibration, and `permission_handler`/`app_settings` calls are mobile-only — they simply won't do anything in the browser preview. That's expected; test those features by building the real Android/iOS app.
+
